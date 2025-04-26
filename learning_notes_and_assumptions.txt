@@ -1,11 +1,26 @@
-- go:
-    - go mod init <module_name>
-        - it does two things:
-            1. creates go.mod in project root, declaring <module_name>
-            as the unique base import path for all packages
-            2. turn's on Go's module system, so that when I import external
-            libraries, Go will automatically record versions and fetch them
+- first, the backend:  
+    - i set up Go with `go.mod` and ran `go run github.com/99designs/gqlgen@latest generate` to turn my GraphQL schema into actual Go code  
+    - that gives me type-safe models and resolver stubs right out of the box  
+    - then i hit `go run .` so the server spins up at `http://localhost:8080/graphql`  
 
-- graphql
-    - go run github.com/99designs/gqlgen@latest init
+- now, the frontend:  
+    - in another terminal i ran `npm install` (or `yarn install`/`pnpm install`) to grab Vue, Apollo, Vite, etc.  
+    - i created a `.env` file with my `VITE_GOOGLE_MAPS_API_KEY` and pointed `VITE_GRAPHQL_ENDPOINT` at `http://localhost:8080/graphql`  
+    - next i wired up the `<script>` tag in `index.html` (or dynamically injected it in `main.ts`) so Google Maps can load  
 
+- making the typeahead work (typeahead ↔ map):  
+    - the Typeahead component fires GraphQL queries as i type, caching the full state list on load  
+    - on each keystroke i filter locally and show suggestions  
+    - hovering a suggestion emits an event that the GoogleMap component picks up, fits the right bounds, and highlights the polygon  
+
+- putting it all together:  
+    - run `npm run dev` (frontend) and keep the Go server running side by side  
+    - typing “Cal…” in the box zooms to California immediately, clicking locks it in and creates border highlights  
+
+- prepping for production:  
+    - i build the Go server with `go build -o server`  
+    - i build the frontend with `npm run build`, which drops optimized assets into `dist/`  
+
+- a couple of final thoughts:  
+    - keep your `.env` out of version control (it’s in `.gitignore`) so API keys stay secret  
+    - if the map or GraphQL calls fail, always peek at the browser console and your Go server logs to see what’s up
