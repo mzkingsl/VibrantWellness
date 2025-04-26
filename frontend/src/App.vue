@@ -21,7 +21,7 @@ function highlightState(stateName: string | null) {
 }
 
 function resetMap() {
-  // Direct call to reset function
+  // call to reset function
   mapRef.value?.resetHighlight()
   typeaheadRef.value?.resetSelectedState()
 }

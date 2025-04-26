@@ -87,7 +87,7 @@
   function resetSelectedState() {
   inputValue.value = ''
   selectedState.value = null
-  // Force immediate reset
+  // force immediate reset
   emit('hover-state', null)
 }
   

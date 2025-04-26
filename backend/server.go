@@ -25,13 +25,13 @@ import (
 const defaultPort = "8080"
 
 func main() {
-	// 1. get your port
+	// setting up the port
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
 	}
 
-	// 2. connect to Mongo
+	// create a context with 10 seconds before timing out
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	mongoURI := os.Getenv("MONGO_URI") // e.g. "mongodb://mongo:27017/statesdb"
@@ -40,13 +40,13 @@ func main() {
 		log.Fatal("cannot connect to mongo:", err)
 	}
 
-	// 3. (optional) seed the states collection if empty
+	// seed the states in our db
 	seedStates(ctx, client)
 
-	// 4. wire up your resolver with the client
+	// connecting mongo to graphql resolver
 	resolver := &graph.Resolver{MongoClient: client}
 
-	// 5. build your server
+	// building graphql server, 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
 	srv.AddTransport(transport.Options{})
@@ -59,20 +59,19 @@ func main() {
 		Cache: lru.New[string](100),
 	})
 
-	// 6. mount handlers WITH CORS handling
+	// mitigating cors issues 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// Set CORS headers
+		// setting CORS headers
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-		// Handle preflight OPTIONS request
+		
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
 
-		// Regular handling
 		if r.URL.Path == "/" {
 			playground.Handler("GraphQL playground", "/query").ServeHTTP(w, r)
 		} else if r.URL.Path == "/query" {
@@ -86,7 +85,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
-// seedStates will insert all 50 states + territories if the collection is empty.
+// seedStates inserts all 50 states + territories if empty
 func seedStates(ctx context.Context, client *mongo.Client) {
 	col := client.Database("statesdb").Collection("states")
 	count, err := col.CountDocuments(ctx, bson.D{})
@@ -96,7 +95,7 @@ func seedStates(ctx context.Context, client *mongo.Client) {
 	if count > 0 {
 		return
 	}
-	// a simple in-memory list — you can also load from JSON
+	// a simple in-memory list 
 	states := []interface{}{
 		model.State{Name: "Alabama", Abbreviation: "AL"},
 		model.State{Name: "Alaska", Abbreviation: "AK"},

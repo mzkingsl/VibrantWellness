@@ -9,7 +9,7 @@
   const dataLayer = ref<google.maps.Data | null>(null)
   const stateBounds = ref<Map<string, google.maps.LatLngBounds>>(new Map())
   
-  // Default view settings
+  // default view settings
   const defaultCenter = { lat: 39.8283, lng: -98.5795 }
   const defaultZoom = 4
   
@@ -18,13 +18,14 @@
       const mapElement = document.getElementById('map')
       if (!mapElement) throw new Error('Map container not found')
       
+      //creating map instance with default settings
       map.value = new google.maps.Map(mapElement, {
         center: defaultCenter,
         zoom: defaultZoom,
         mapTypeControl: false
       })
   
-      // Initialize data layer and load GeoJSON
+      // building a data layer on the map and loading US state geojsons
       dataLayer.value = new google.maps.Data({ map: map.value })
       dataLayer.value.loadGeoJson('/us-states.json', {}, features => {
         features?.forEach(feature => {
@@ -32,6 +33,7 @@
           const bounds = new google.maps.LatLngBounds()
           const geometry = feature.getGeometry()
           
+          // computing each state's geographic bounds
           geometry?.forEachLatLng(latLng => {
             bounds.extend(latLng)
           })
@@ -40,7 +42,7 @@
         })
       })
   
-      // Set default style
+      // styling
       dataLayer.value.setStyle({
         fillColor: 'transparent',
         strokeWeight: 1,
@@ -48,22 +50,22 @@
       })
   
     } catch (error) {
-      console.error('Map initialization error:', error)
+      console.error('map error:', error)
       const fallback = document.getElementById('map')
-      if (fallback) fallback.innerHTML = '<p>Error loading map</p>'
+      if (fallback) fallback.innerHTML = '<p>map error</p>'
     }
   })
   
   function highlightState(stateName: string | null) {
   if (!dataLayer.value || !map.value) return
 
-  // Reset immediately if no state provided
+  // if no state is selected, clear any current highlights
   if (!stateName) {
     resetHighlight()
     return
   }
 
-  // Existing highlight logic
+  // zoom map to state boundaries 
   const bounds = stateBounds.value.get(stateName)
   if (bounds && !bounds.isEmpty()) {
     map.value.fitBounds(bounds, 20)
@@ -81,13 +83,13 @@
 }
 
 function resetHighlight() {
-  // Immediate reset to default view
+  // reset to default view
   if (map.value) {
     map.value.setCenter(defaultCenter)
     map.value.setZoom(defaultZoom)
   }
   
-  // Reset styles
+  // reset styles
   dataLayer.value?.revertStyle()
   dataLayer.value?.setStyle({
     fillColor: 'transparent',
