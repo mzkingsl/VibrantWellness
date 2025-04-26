@@ -1,0 +1,13 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type State {
+  id: ID!
+  name: String!
+  abbreviation: String!
+}
+
+type Query {
+  states(filter: String!): [State!]!
+}

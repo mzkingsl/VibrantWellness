@@ -1,0 +1,11 @@
+- go:
+    - go mod init <module_name>
+        - it does two things:
+            1. creates go.mod in project root, declaring <module_name>
+            as the unique base import path for all packages
+            2. turn's on Go's module system, so that when I import external
+            libraries, Go will automatically record versions and fetch them
+
+- graphql
+    - go run github.com/99designs/gqlgen@latest init
+
